@@ -56,7 +56,7 @@
             \textbf{Autores:}Iago Valeiro Castrillón \\
             Alejandro Dopazo López \\
             Alberto Ferreiro Campello \\
-            \textbf{Fecha:}\textit{A Coruña, 17 Octubre 2022}\\
+            \textbf{Fecha:}\textit{A Coruña, 19 Diciembre 2022} \\
         \end{large}
         
     \end{center}
@@ -103,7 +103,7 @@
 %%%%%%%
 %%%%%%%
 \section{Introducción}\label{cap.introduccion}
-La aplicación propuesta consiste en un editor de imágenes vectoriales para dispositivos móviles Android, inicialmente sería para la creación de iconos y basaría su funcionamiento en la interconexión de puntos en una malla cuadriculada, además llevaría integrado un sistema de control de versiones basado en git que además de permitir guardar un historial de cambios, añadiría la funcionalidad de almacenamiento en la nube para las imágenes exportadas.
+La aplicación propuesta consiste en un editor de imágenes vectoriales para dispositivos móviles Android, inicialmente sería para la creación de iconos y basaría su funcionamiento en la interconexión de puntos en una malla cuadriculada, además llevaría integrado un sistema de guardado local mediante una base de datos SQL, y la posibilidad de guardar las imágenes exportadas en la nube con Firebase.
 
 %%
 \subsection{Objetivos}
@@ -117,7 +117,7 @@ La aplicación propuesta consiste en un editor de imágenes vectoriales para dis
     \begin{itemize}
         \item Exportación de las imágenes a formatos de archivo habituales como \\
         .svg~\cite{SVG} que permitan compartirlas con otros usuarios.
-        \item Manejo de los cambios en las imágenes mediante un sistema de control de versiones integrado como puede ser el proporcionado por Git a través de la librería JGit~\cite{JGit}.
+        \item Manejo de los cambios en las imágenes mediante un sistema de guardado local en base de datos SQL~\cite{SQL}.
     \end{itemize}
 \end{enumerate}
 
@@ -150,7 +150,7 @@ Es aplicable para, por ejemplo, el diseño de recursos para aplicaciones gráfic
 \section{Análisis de requisitos}
 \begin{itemize}
     \item La aplicación debe ser capaz de permitir al usuario realizar dibujos utilizando gráficos vectoriales que permitan ser redimensionados sin perder calidad.
-    \item Dichos dibujos pueden incuír líneas rectas y curvas, la aplicación que se desarrolle debe dar soporte a ambas.
+    \item Dichos dibujos pueden incluir líneas rectas y curvas, la aplicación que se desarrolle debe dar soporte a ambas.
     \item Con el objetivo de facilitar el proceso de dibujado, si dos vértices están muy próximos estos deberían unirse de forma automática. Dicho de otro modo, los puntos de inicio y fin de cada línea deben ser fijos, dispuestos en una cuadrícula de puntos.
     \item Se espera que la aplicación incluya una opción habitual de los editores de imágenes como es "deshacer".
     \item La aplicación debe permitir exportar los dibujos a formatos de archivo habituales.
@@ -167,49 +167,56 @@ Se pueden disponer los siguientes elementos en la pantalla:
 	\item Curvas de Bézier cuadráticas.
 \end{itemize}
 
-Cada tipo de elemento tiene un modo asociado,
-que se puede seleccionar mediante
-la barra de botones de la actividad principal.
-Los modos están identificados por las letras  'L', 'Q' y 'C' para
-las líneas rectas y las curvas cuadráticas y cúbicas, respectivamente.
+Cada tipo de elemento tiene un modo asociado, que se puede seleccionar mediante la barra de botones de la actividad principal.
+Los modos están identificados por iconos que identifican a las curvas cuadráticas y cúbicas.
 
 El modo actual se muestra al principio de la barra de botones.
 
-Las líneas rectas se dibujan arrastrando entre los dos puntos que
-vayan a definirla.
+Las líneas rectas se dibujan arrastrando entre los dos puntos que vayan a definirla.
 
-Las curvas se definen pulsando primero en cada punto de la recta 
-y luego en sus puntos de control.
+Las curvas se definen pulsando primero en cada punto de la recta y luego en sus puntos de control.
 Las curvas cuadráticas tienen un punto de control y las cúbicas dos.
 
 \subsubsection{Exportación a ficheros}
 Depende de la funcionalidad \emph{Creación de imágenes vectoriales}.
-Las imágenes generadas se pueden exportar a ficheros externos en formato svg. El formato usado se ceñirá a la especificación SVGTiny~\cite{SVGTiny} excepto las funciones de text, al igual que los VectorDrawable de android~\cite{VectorDrawable}.
+Las imágenes generadas se pueden exportar a ficheros externos en formato svg. El formato usado se ceñirá a la especificación SVGTiny~\cite{SVGTiny} excepto las funciones de text, al igual que los VectorDrawable de Android~\cite{VectorDrawable}.
 
 %%
 
-\subsection{Integración con control de versiones}
-Se podrán integrar los proyectos con el sistema de control de versiones Git~\cite{Git}. Se podrán realizar las siguientes acciones:
+\subsection{Sistema de guardado local}
+Se implementará un sistema de guardado local mediante una base de datos SQL, esta guardará cada línea del dibujo en formato String lo que permitirá realizar las siguientes acciones:
 \begin{itemize}
-    \item Revisar el registro de commits.
-    \item Realizar commits.
-    \item Crear ramas.
-    \item Ver las ramas disponibles.
-    \item Fusionar ramas.
+    \item Deshacer/rehacer la última acción.
+    \item Eliminar un trazo específico.
+    \item Guardar distintos dibujos.
+    \item Exportar un dibujo concreto a SVG para su guardado en la nube y/o compartir con otras apps.
 \end{itemize}
 
 %%
 
 \subsection{Guardado automático de los ficheros}
-Habrá un servicio en segundo plano que guarde las imágenes creadas a un fichero de forma automática cada cierto tiempo, el cual será ajustable mediante la propia aplicación. Ésto se podrá desactivar completamente mediante la propia aplicación.
+La base de datos local se actualizará cada vez que se añada un nuevo trazo, además habrá un servicio en segundo plano que convertirá las imágenes creadas a un fichero SVG y lo subirá a Firebase~\cite{Firebase} de forma automática cada cierto tiempo. 
+
+Esta funcionalidad estará inicialmente desactivada y se podrá activar y configurar desde la propia aplicación.
 
 %%
 \subsection{Prioridades}
-La funcionalidad \emph{Exportación a ficheros} depende de la funcionalidad \emph{Creación de imágenes vectoriales}.
-La funcionalidad \emph{Integración con control de versiones} depende de la funcionalidad \emph{Exportación a ficheros}.
-La funcionalidad \emph{Guardado automático de los ficheros} depende de la funcionalidad \emph{Exportación a ficheros}.
+\begin{enumerate}
+    \item Creación de imágenes vectoriales.
+    \item Guardado local.
+    \item Edición de imágenes.
+    \begin{itemize}
+        \item Deshacer.
+        \item Rehacer.
+        \item Seleccionar y eliminar un trazo.
+    \end{itemize}
+    \item Exportación a ficheros.
+    \item Compartir a otras apps.
+    \item Integración con Firebase.
+    \item Guardado automático en la nube.
+\end{enumerate}
 
-\emph{Creación de imágenes vectoriales} tiene la mayor prioridad, seguida de \emph{Exportación a ficheros}, la cual es sucedida por \emph{Integración con control de versiones}.
+
 
 %%%%%%%
 %%%%%%%
@@ -221,7 +228,7 @@ Primera iteración: Implementación de la funcionalidad \emph{Exportación a fic
 
 Segunda iteración: Implementación de la funcionalidad \emph{Exportación a ficheros}.
 
-Tercera iteración: Implementación de la funcionalidad \emph{Integración con control de versiones}.
+Tercera iteración: Implementación de la funcionalidad \emph{Guardado en base de datos}.
 
 Cuarta iteración: Implementación de la funcionalidad \emph{Guardado automático de los ficheros}.
 
@@ -229,20 +236,25 @@ Posiblemente otras iteraciones, dependiendo del curso del desarrollo: Expansión
 
 
 %%
+
 \subsection{Responsabilidades}
 Iago Valeiro Castrillón: 
 \emph{Creación de imágenes vectoriales}, 
+\emph{Exportación a ficheros}, 
 \emph{Guardado automático de los ficheros} e 
-\emph{Integración con control de versiones}.
+\emph{Guardado en base de datos}.
 
 Alejandro Dopazo López:
-\emph{Creación de imágenes vectoriales} e
-\emph{Integración con control de versiones}
+\emph{Creación de imágenes vectoriales}, 
+\emph{Exportación a ficheros}, 
+\emph{Guardado automático de los ficheros} e 
+\emph{Guardado en base de datos}.
 
 Alberto Ferreiro Campello:
+\emph{Creación de imágenes vectoriales}, 
 \emph{Exportación a ficheros}, 
-\emph{Guardado automático de los ficheros} e
-\emph{Integración con control de versiones}.
+\emph{Guardado automático de los ficheros} e 
+\emph{Guardado en base de datos}.
 
 
 %%
@@ -270,62 +282,48 @@ Se añadirán o quitarán iteraciones al proyecto de acuerdo a lo especificado e
 \section{Diseño}
 %%
 \subsection{Arquitectura}
+Se utilizará la arquitectura Clean Code~\cite{CleanCode} basada en el patrón de diseño model view controller o MVC~\cite{MVC}.
 
 \subsubsection{Actividad principal}
-MainActivity, con una barra con botones para seleccionar los modos de dibujo una Vistamalla que muestre la imagen en sí y responda a las acciones y un menú de opciones.
-
-Desde del menú de opciones se puede:
+MainActivity, con una barra con botones para seleccionar los modos de dibujo una Vistamalla que muestre la imagen en sí y responda a las acciones y un menú de opciones con:
 \begin{itemize}
-	\item exportar la imagen actual a un fichero.
-    \item seleccionar un fichero o un repositorio git a abrir con un Intent implícito.
-    \item Lanzar la actividad ControlVersiones.
+	\item Exportación de la imagen actual a un fichero.
+    \item Conectarse a Firebase para el sistema de guardado en la nube.
     \item Lanzar la actividad Ajustes.
 \end{itemize}
 %%
 
 \subsubsection{Vistamalla}
-La vista muestra la malla de puntos y las formas dibujadas por el usuario.
+La vista muestra una malla de puntos y las formas dibujadas por el usuario.
 
-También gestiona su propia interacción con el usuario.
+Gestiona su propia interacción con el usuario.
 
-\subsubsection{Actividad ControlVersiones}
-Si hay un repositorio de git, se muestra una RecyclerView con un registro de commits.
-
-Para operar con los repositorios, se usará la librería JGit\cite{JGit}.
-
-Si no, se ofrece la opción de crear un repositorio de git con la imagen actual en una carpeta seleccionada con un intent implícito.
-
-La actividad tiene botones para lanzar la actividad GestionRamas y el fragmento RealizarCommit, que muestra si se realizaron cambios y una entrada de texto para el mensaje del commit.
+Envía los trazos a base de datos.
 %%
 
 \subsubsection{Actividad Ajustes}
-Muestra una entrada para cambiar la frecuencia con la que se guarda automáticamente la imagen actual y un botón para deshabilitar el servicio GuardadoAutomatico.
+Muestra un sistema de login para utilizar los servicios de Firebase, así como una entrada para cambiar la frecuencia con la que se guarda automáticamente la imagen actual, y un botón para habilitar el servicio GuardadoAutomatico.
 
-%%
-
-\subsubsection{Actividad GestionRamas}
-Se muestran las ramas actuales con una ListView. Hay un FloatingActionButton para añadir ramas. Pulsar en una rama hace que se cambie a ella. Si se desliza una rama a la izquierda, se fusiona a la rama actual.
 %%
 
 \subsection{Persistencia}
-Se almacenarán las imágenes y los repositorios en el sistema de ficheros.
-También se almacenarán los ajustes del servicio de guardado automático.
+Se almacenarán las imágenes en una base de datos SQL. Además se almacenarán los ajustes del servicio de guardado automático en un fichero local "SharedPreferences".
+
+%%
 
 \subsection{Vista}
-Una actividad principal mostrando un menú con las acciones que se pueden realizar sobre la imagen actual, ordenados por la recencia de su uso. La actividad contiene el fragmento con la malla de puntos.
+Una actividad principal mostrando un menú con las acciones que se pueden realizar sobre la imagen actual. La actividad contiene el fragmento con la malla de puntos.
 
-Desde el menú de la actividad principlal se puede navegar a las actividades de la gestión de versiones y de los ajustes.
-
-La actividad del control de versiones muestra el registro de commits y la opción para añadir un commit. Desde ésta actividad se puede navegar a la de la gestión de las ramas.
-
-En la actividad de la gestión de las ramas se muestran las ramas actuales y las opciones para añadir nuevas ramas y cambiar de ramas.
+Desde el menú de la actividad principal se puede navegar a la actividad de ajustes.
 
 En la actividad de ajustes se muestra una entrada para cambiar la frecuencia con la que se guarda automáticamente la imagen actual y un botón para deshabilitar el servicio de guardado automático.
 
 %%
 
 \subsection{Comunicaciones}
-Las imágenes y los proyectos de git se guardan en el sistema de ficheros local.
+Las imágenes se guardan en formato String en la base de datos local (un nombre/id y múltiples path, uno por cada trazo).
+Para enviar una imagen, se extrae de la base de datos y se convierte a SVG, tras la conversión se envía mediante un intent a otras apps, o a la base de datos online en Firebase.
+
 %%
 
 \subsection{Sensores}
@@ -334,13 +332,44 @@ No se debería usar ninguno explícitamente aparte de la entrada por la pantalla
 
 \subsection{Background}
 \subsubsection{Servicio GuardadoAutomatico}
-Mientras el usuario va haciendo su diseño podrá ir guardando sus 
-avances, aunque el sistema irá guardandolo de manera automática para
-evitar que se pierda información por culpa de un cierre inesperado
-de la aplicación.
+Mientras el usuario va haciendo su diseño se irán guardando sus 
+avances en local, además si el usuario lo desea, puede activar el sistema de guardado en la nube en Firebase.
 
-El guardado sucederá mediante el servicio GuardadoAutomatico. Éste sucederá cada vez que pase un período definido en la actividad Ajustes.
+El guardado automático en la nube sucederá mediante el servicio GuardadoAutomatico. Éste sucederá cada vez que pase un período definido en la actividad Ajustes.
+
 %%
+
+\section{Avances sobre el entregable anterior}
+\subsection{Diseño}
+Ya que la librería para trabajar con Git no ofrece soporte para Android, y no se han encontrado alternativas funcionales, se ha quitado del diseño a favor de Firebase.
+
+%%
+
+\subsection{Avances}
+Se ha añadido el icono a la aplicación.
+Se ha cambiado el modo de selección de línea de texto a iconos.
+Se ha implementado la arquitectura Clean Code para el acceso a base de datos.
+
+%%
+
+\subsection{Hitos}
+Actualmente la aplicación permite realizar dibujos mediante distintos tipos de trazos, para probar el modo dibujo, simplemente se instala en un dispositivo o emulador y:
+\begin{itemize}
+    \item Para dibujar líneas rectas, seleccionamos el modo línea y observamos que ha cambiado la previsualización de herramienta seleccionada, a continuación tocamos donde queremos que inicie y arrastramos hasta donde queremos que acabe, al soltar aparecerá la línea.
+    \item Para las líneas cúbicas y cuadráticas, escogemos el modo igual que con las rectas, y a continuación, para dibujar, tocaremos donde queremos que comience y finalice la línea. En cuanto hayamos colocado el segundo punto aparecerá la línea, tras esto sólo resta añadir un tercer punto (dos en el caso de las cuadráticas), y ya se nos dibujará la línea con la curva aplicada.
+\end{itemize}
+Además realiza de forma transparente el almacenamiento de los dibujos en base de datos, para comprobar su correcto funcionamiento simplemente hay que ir a App Inspection -> Database Inspector, y tras hacer cualquier trazo, seleccionar la tabla Draws y marcar Live Updates, tras esto podremos comprobar que al hacer cualquier trazo, éste se guarda en tiempo real.
+
+%%
+
+\subsection{Detalles de la implementación}
+El diseño de la base de datos en esta implementación es muy sencillo y no se utiliza correctamente, se ha desarrollado un modelo Entidad-Relación sencillo de cara a la siguiente implementación.
+
+%%
+
+\subsection{Pruebas}
+Se ha comprobado el funcionamiento de la app en una tablet de 10" BMXC B801 con Android 8, un Poco F3 con Android 12, y un Google Nexus 5 (emulado) con Android 13.
+Todo funciona de forma correcta, salvo el guardado local en la tablet el cual no ha sido posible probar dada la versión de Android (no es posible ver las bases de datos en App Inspection con una versión de Android tan antigua).
 
 %%%%%%%
 %%%%%%%
